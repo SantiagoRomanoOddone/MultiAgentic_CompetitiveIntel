@@ -58,6 +58,8 @@ class ReportWriterAgent:
         )
 
         for chunk in stream:
+            if not chunk.choices:
+                continue
             delta = chunk.choices[0].delta.content
             if delta:
                 full_report += delta
