@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python main.py --help)",
+      "Bash(python main.py --company \"Basecamp\" --competitors \"Asana,Linear\" --market \"project management software\")",
+      "Read(//Users/sr/.config/**)",
+      "Bash(env)"
+    ]
+  }
+}
