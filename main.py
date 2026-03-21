@@ -95,11 +95,10 @@ def get_input_interactive() -> tuple[str, list[str], str]:
 
 def check_api_key() -> None:
     """Verify the API key is configured before we start making calls."""
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        print("\n❌ ANTHROPIC_API_KEY is not set.\n")
+    if not os.getenv("OPEN_AI_KEY") or not os.getenv("OPEN_AI_ENDPOINT") or not os.getenv("CHAT_MODEL"):
+        print("\n❌ Missing Azure credentials.\n")
         print("   1. Copy .env.example to .env")
-        print("   2. Add your API key from https://console.anthropic.com")
-        print("   3. Run: python main.py\n")
+        print("   2. Fill in OPEN_AI_ENDPOINT, OPEN_AI_KEY, CHAT_MODEL\n")
         sys.exit(1)
 
 
