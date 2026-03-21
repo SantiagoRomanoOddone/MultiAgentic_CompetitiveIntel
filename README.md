@@ -73,6 +73,4 @@ The report is saved as `intel_[company]_[timestamp].md`.
     └── report_writer.py     # Report Writer (streaming)
 ```
 
----
 
-*Built with the [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python) and Claude Sonnet 4.6.*
