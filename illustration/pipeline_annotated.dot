@@ -1,0 +1,23 @@
+// Sales Lead Qualification Pipeline — annotated version
+// Generated from agent_framework WorkflowViz, then enriched with edge labels
+// Render: dot -Tpng pipeline_annotated.dot -o pipeline_annotated.png
+
+digraph Workflow {
+  rankdir=TD;
+  fontname="Helvetica";
+  node [shape=box, style="filled,rounded", fontname="Helvetica", fontsize=12];
+  edge [color="#333333", arrowhead=vee, fontname="Helvetica", fontsize=10];
+
+  // Nodes
+  "Researcher"   [fillcolor="#90EE90", label="Researcher\n(Start)\n\nGathers intel on the lead:\ncompany, pain points, relevance"];
+  "Qualifier"    [fillcolor="#87CEEB", label="Qualifier\n\nScores 1\u201310\nhot / warm / cold"];
+  "Outreach"     [fillcolor="#87CEEB", label="Outreach\n\nDrafts personalised\ncold email"];
+  "Auto-Skip"    [fillcolor="#FFB6C1", label="Auto-Skip\n\nScore < 5\nLead discarded"];
+  "Human Review" [fillcolor="#DDA0DD", label="Human Review\n\nApprove / Reject / Edit\n(human-in-the-loop)"];
+
+  // Edges
+  "Researcher" -> "Qualifier"    [label="  research brief  "];
+  "Qualifier"  -> "Outreach"     [label="  score >= 5  ", color="#228B22", fontcolor="#228B22"];
+  "Qualifier"  -> "Auto-Skip"    [label="  score < 5  ", color="#DC143C", fontcolor="#DC143C", style=dashed];
+  "Outreach"   -> "Human Review" [label="  email draft  "];
+}

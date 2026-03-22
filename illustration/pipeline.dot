@@ -1,0 +1,15 @@
+digraph Workflow {
+  rankdir=TD;
+  node [shape=box, style=filled, fillcolor=lightblue];
+  edge [color=black, arrowhead=vee];
+
+  "Researcher" [fillcolor=lightgreen, label="Researcher\n(Start)"];
+  "Qualifier" [label="Qualifier"];
+  "Outreach" [label="Outreach"];
+  "Auto-Skip" [label="Auto-Skip"];
+  "Human Review" [label="Human Review"];
+  "Researcher" -> "Qualifier";
+  "Qualifier" -> "Outreach";
+  "Qualifier" -> "Auto-Skip";
+  "Outreach" -> "Human Review";
+}
