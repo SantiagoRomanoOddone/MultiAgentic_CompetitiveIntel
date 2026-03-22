@@ -4,6 +4,7 @@ import json
 from agent_framework import Agent
 
 from lead_agents.base import get_client
+from lead_agents.response_utils import extract_text
 from models import QualifiedLead, OutreachDraft
 
 
@@ -28,5 +29,5 @@ class OutreachAgent:
                 f"Research:\n{lead.research}"
             )
         )
-        data = json.loads(response.text)
+        data = json.loads(extract_text(response))
         return OutreachDraft(**{**lead.__dict__, "subject": data["subject"], "body": data["body"]})

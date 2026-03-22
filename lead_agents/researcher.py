@@ -4,6 +4,7 @@ import json
 from agent_framework import Agent
 
 from lead_agents.base import get_client
+from lead_agents.response_utils import extract_text
 from models import Lead, ResearchedLead
 
 
@@ -26,5 +27,5 @@ class ResearcherAgent:
                 f"{lead.name} — {lead.title} at {lead.company} ({lead.industry})"
             )
         )
-        data = json.loads(response.text)
+        data = json.loads(extract_text(response))
         return ResearchedLead(**{**lead.__dict__, "research": data["research"]})

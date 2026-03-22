@@ -4,6 +4,7 @@ import json
 from agent_framework import Agent
 
 from lead_agents.base import get_client
+from lead_agents.response_utils import extract_text
 from models import ResearchedLead, QualifiedLead
 
 
@@ -28,7 +29,10 @@ class QualifierAgent:
                 f"Research:\n{lead.research}"
             )
         )
-        data = json.loads(response.text)
+        raw = extract_text(response)
+        if not raw:
+            raise ValueError(f"Qualifier got empty response. Response object: {response!r}")
+        data = json.loads(raw)
         return QualifiedLead(
             **{
                 **lead.__dict__,
