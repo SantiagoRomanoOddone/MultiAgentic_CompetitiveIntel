@@ -1,23 +1,24 @@
-"""
-Shared base configuration for all agents.
-"""
-
-import os
-from openai import AzureOpenAI
-from dotenv import load_dotenv
-
-load_dotenv()
-
-MODEL = os.getenv("CHAT_MODEL")
+import json
+import anthropic
 
 
-def get_client() -> AzureOpenAI:
-    endpoint = os.getenv("OPEN_AI_ENDPOINT")
-    api_key = os.getenv("OPEN_AI_KEY")
-    if not endpoint or not api_key or not MODEL:
-        raise ValueError("Missing OPEN_AI_ENDPOINT / OPEN_AI_KEY / CHAT_MODEL in .env")
-    return AzureOpenAI(
-        azure_endpoint=endpoint,
-        api_key=api_key,
-        api_version="2024-12-01-preview",
-    )
+MODEL = "claude-opus-4-6"
+
+
+class BaseAgent:
+    def __init__(self):
+        self.client = anthropic.Anthropic()
+        self.model = MODEL
+
+    def _call(self, system: str, user: str, max_tokens: int = 1024) -> dict:
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+        )
+        text = response.content[0].text.strip()
+        # Strip markdown code fences if present
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        return json.loads(text)

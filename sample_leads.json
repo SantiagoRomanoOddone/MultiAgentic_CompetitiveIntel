@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Sofia Alvarez",
+    "company": "Logistica Express",
+    "title": "Head of Operations",
+    "email": "s.alvarez@logisticaexpress.com",
+    "industry": "Logistics & Supply Chain"
+  },
+  {
+    "name": "Marco Fernandez",
+    "company": "FinovaPay",
+    "title": "CTO",
+    "email": "m.fernandez@finovapay.com",
+    "industry": "Financial Technology"
+  },
+  {
+    "name": "Laura Chen",
+    "company": "RetailMax",
+    "title": "VP of Sales",
+    "email": "l.chen@retailmax.com",
+    "industry": "Retail Technology"
+  },
+  {
+    "name": "James Okafor",
+    "company": "EduLearn Platform",
+    "title": "CEO",
+    "email": "j.okafor@edulearnplatform.com",
+    "industry": "EdTech"
+  }
+]

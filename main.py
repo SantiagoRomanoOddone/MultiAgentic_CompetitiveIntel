@@ -1,151 +1,71 @@
 #!/usr/bin/env python3
 """
-Competitive Intelligence Platform
+Sales Lead Qualification Pipeline
 ==================================
-A multi-agent AI system that automatically researches competitors,
-analyzes market dynamics, detects strategic signals, and generates
-executive-ready intelligence reports.
+Multi-agent system that researches, qualifies, and drafts outreach
+for B2B sales leads — with human-in-the-loop approval before sending.
 
-Run interactively:
-    python main.py
-
-Run with arguments (no prompts):
-    python main.py --company "Notion" \
-                   --competitors "Confluence,Coda,Obsidian" \
-                   --market "collaborative workspace software"
-
-Run the built-in demo:
-    python main.py --demo
+Usage:
+    python main.py                          # runs sample_leads.json
+    python main.py --leads my_leads.json    # custom leads file
 """
 
-import sys
 import argparse
+import json
 import os
+import sys
 from pathlib import Path
 
-from agents.orchestrator import Orchestrator
+from models import Lead
+from pipeline import Pipeline
 
 
-# ── Demo configuration ──────────────────────────────────────────────────────
-# A ready-to-run example that works out of the box.
-# Swap these values to analyze any company/market you like.
-DEMO_CONFIG = {
-    "your_company": "Notion",
-    "competitors": ["Confluence", "Coda", "Obsidian"],
-    "market": "collaborative workspace and knowledge management software",
-}
+def load_leads(path: Path) -> list[Lead]:
+    data = json.loads(path.read_text())
+    return [Lead(**item) for item in data]
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="AI-powered competitive intelligence platform",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
-    )
-    parser.add_argument("--company", type=str, help="Your company name")
-    parser.add_argument(
-        "--competitors",
-        type=str,
-        help="Comma-separated competitor names (e.g. 'Salesforce,HubSpot')",
-    )
-    parser.add_argument("--market", type=str, help="Market or industry context")
-    parser.add_argument(
-        "--demo",
-        action="store_true",
-        help=f"Run with demo values ({DEMO_CONFIG['your_company']} vs "
-             f"{', '.join(DEMO_CONFIG['competitors'])})",
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=Path("."),
-        help="Directory to save the report (default: current directory)",
-    )
-    return parser.parse_args()
-
-
-def get_input_interactive() -> tuple[str, list[str], str]:
-    """Prompt the user for inputs interactively."""
-    print("\nEnter the details for your competitive analysis.")
-    print("(Press Enter to use demo values)\n")
-
-    company = input("  Your company name: ").strip()
-    if not company:
-        print("\n  Using demo values...\n")
-        return (
-            DEMO_CONFIG["your_company"],
-            DEMO_CONFIG["competitors"],
-            DEMO_CONFIG["market"],
-        )
-
-    competitors_raw = input("  Competitors (comma-separated): ").strip()
-    competitors = [c.strip() for c in competitors_raw.split(",") if c.strip()]
-
-    market = input("  Market / industry: ").strip()
-
-    if not competitors:
-        print("\n❌ Please provide at least one competitor name.")
-        sys.exit(1)
-
-    if not market:
-        market = f"{company}'s market"
-
-    return company, competitors, market
-
-
-def check_api_key() -> None:
-    """Verify the API key is configured before we start making calls."""
-    if not os.getenv("OPEN_AI_KEY") or not os.getenv("OPEN_AI_ENDPOINT") or not os.getenv("CHAT_MODEL"):
-        print("\n❌ Missing Azure credentials.\n")
-        print("   1. Copy .env.example to .env")
-        print("   2. Fill in OPEN_AI_ENDPOINT, OPEN_AI_KEY, CHAT_MODEL\n")
+def check_env() -> None:
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        print("\nError: ANTHROPIC_API_KEY is not set.")
+        print("  export ANTHROPIC_API_KEY=sk-ant-...")
         sys.exit(1)
 
 
 def main() -> None:
-    args = parse_args()
+    parser = argparse.ArgumentParser(description="Sales Lead Qualification Pipeline")
+    parser.add_argument(
+        "--leads",
+        type=Path,
+        default=Path("sample_leads.json"),
+        help="JSON file with lead objects (default: sample_leads.json)",
+    )
+    args = parser.parse_args()
 
-    # Verify API key first — fail fast before any user prompts
-    check_api_key()
+    check_env()
 
-    # Determine input values from args, demo mode, or interactive prompts
-    if args.demo:
-        your_company = DEMO_CONFIG["your_company"]
-        competitors = DEMO_CONFIG["competitors"]
-        market = DEMO_CONFIG["market"]
-        print(f"\n🎯 Demo mode: analyzing {your_company} vs {', '.join(competitors)}")
-    elif args.company and args.competitors:
-        your_company = args.company
-        competitors = [c.strip() for c in args.competitors.split(",") if c.strip()]
-        market = args.market or f"{your_company}'s market"
-    else:
-        your_company, competitors, market = get_input_interactive()
-
-    # Validate inputs
-    if not competitors:
-        print("❌ Please provide at least one competitor.")
+    if not args.leads.exists():
+        print(f"\nError: leads file not found — {args.leads}")
         sys.exit(1)
 
-    # Ensure output directory exists
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    leads = load_leads(args.leads)
 
-    # Run the multi-agent pipeline
-    orchestrator = Orchestrator()
+    print(f"\n{'═' * 55}")
+    print(f"  Sales Lead Qualification Pipeline")
+    print(f"  {len(leads)} leads loaded")
+    print(f"{'═' * 55}")
+
     try:
-        report_path = orchestrator.run(
-            your_company=your_company,
-            competitors=competitors,
-            market=market,
-            output_dir=args.output_dir,
-        )
+        approved = Pipeline().run(leads)
     except KeyboardInterrupt:
-        print("\n\n⚠️  Interrupted by user. Partial report may not be saved.")
+        print("\n\nInterrupted.")
         sys.exit(0)
-    except Exception as e:
-        print(f"\n❌ Pipeline failed: {e}")
-        raise
 
-    print(f"✨ Open your report: {report_path.resolve()}\n")
+    print(f"\n{'═' * 55}")
+    print(f"  Result: {len(approved)}/{len(leads)} leads approved")
+    for draft in approved:
+        print(f"    • {draft.name} @ {draft.company}  ({draft.score}/10 {draft.category})")
+    print(f"{'═' * 55}\n")
 
 
 if __name__ == "__main__":
