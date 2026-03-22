@@ -1,76 +1,119 @@
-# Competitive Intelligence Platform
+# Sales Lead Qualification Pipeline
 
-A multi-agent system that researches competitors, analyzes market dynamics, detects strategic signals, and generates intelligence reports — in minutes instead of hours.
+A multi-agent system that takes raw sales leads and automatically researches, qualifies, and drafts personalized outreach — powered by **Microsoft `agent-framework`** and **Azure OpenAI**.
 
 ---
 
-## Architecture
+## What it does
+
+Given a list of leads (name, title, company, industry), the pipeline runs 3 AI agents in sequence:
 
 ```
-[company + competitors + market]
+[sample_leads.json]
         │
         ▼
-   Orchestrator          # Sequential pipeline coordinator. No AI — pure workflow logic.
+  Researcher Agent       # Writes a research brief: what the company does, pain points, relevance
         │
         ▼
-   Research Agent        # Builds a structured profile for each competitor
+  Qualifier Agent        # Scores the lead 1–10 and labels it hot / warm / cold
         │
         ▼
-   Analysis Agent        # Strategic synthesis + scores competitors via tool use
+  Outreach Agent         # Drafts a personalized cold email (subject + body)
         │
         ▼
-   Signal Detector       # Flags threats, opportunities, and market inflection points
+  Human Review (CLI)     # You approve, skip, or edit each lead before final export
         │
         ▼
-   Report Writer         # Compiles everything into a streamed executive report
-        │
-        ▼
-  intel_[company]_[date].md
+  [console output / export]
 ```
 
-**Patterns demonstrated:** sequential pipeline, tool use for structured output, streaming.
+---
+
+## Tech stack
+
+| Layer | Library |
+|---|---|
+| Agent framework | [`agent-framework-core`](https://github.com/microsoft/agent-framework) by Microsoft |
+| LLM backend | Azure OpenAI (Chat Completions) via `AzureOpenAIChatClient` |
+| Data models | Pydantic (`models.py`) |
+| Auth | API key (`OPEN_AI_KEY` in `.env`) |
 
 ---
 
 ## Quickstart
 
-**Prerequisites:** Python 3.10+, [Anthropic API key](https://console.anthropic.com)
+**Prerequisites:** Python 3.10+, Azure OpenAI deployment
 
 ```bash
 # 1. Install
-pip install -r requirements.txt
+pip install agent-framework-core --pre
+pip install rich python-dotenv
 
 # 2. Configure
 cp .env.example .env
-# Add your ANTHROPIC_API_KEY to .env
+# Fill in your Azure OpenAI values (see below)
 
 # 3. Run
-python main.py --demo
-
-# Or with your own inputs
-python main.py \
-  --company "Slack" \
-  --competitors "Microsoft Teams,Zoom,Discord" \
-  --market "business communication"
+python main.py
 ```
 
-The report is saved as `intel_[company]_[timestamp].md`.
+### `.env` variables
+
+```env
+OPEN_AI_ENDPOINT=https://<your-resource>.openai.azure.com
+OPEN_AI_KEY=<your-api-key>
+CHAT_MODEL=<your-deployment-name>        # e.g. gpt-4o
+```
 
 ---
 
-## Structure
+## Project structure
 
 ```
-├── main.py                  # CLI entry point
+├── main.py                  # Entry point — runs the full pipeline
+├── pipeline.py              # Orchestrates the 3 agents in sequence
+├── models.py                # Pydantic models: Lead → ResearchedLead → QualifiedLead → OutreachDraft
+├── human_loop.py            # CLI for reviewing and approving leads
+├── sample_leads.json        # Example input leads
 ├── requirements.txt
-├── .env.example
-└── agents/
-    ├── base.py              # Shared client + model config
-    ├── orchestrator.py      # Pipeline coordinator
-    ├── researcher.py        # Research Agent
-    ├── analyst.py           # Analysis Agent (tool use)
-    ├── signal_detector.py   # Signal Detection Agent
-    └── report_writer.py     # Report Writer (streaming)
+└── lead_agents/
+    ├── base.py              # AzureOpenAIChatClient setup (reads from .env)
+    ├── researcher.py        # Researcher Agent
+    ├── qualifier.py         # Qualifier Agent
+    └── outreach.py          # Outreach Agent
 ```
 
+---
 
+## Data flow
+
+Each agent receives a Pydantic model and returns an enriched version:
+
+```
+Lead
+  └─> ResearchedLead   (+ research: str)
+        └─> QualifiedLead   (+ score: int, category: hot|warm|cold, reasoning: str)
+              └─> OutreachDraft   (+ subject: str, body: str)
+```
+
+---
+
+## How agents work
+
+Each agent in `lead_agents/` follows the same pattern:
+
+```python
+from agent_framework import Agent
+from agent_framework.azure import AzureOpenAIChatClient
+
+client = AzureOpenAIChatClient(endpoint=..., api_key=..., deployment_name=...)
+agent = Agent(client, instructions="...")
+response = asyncio.run(agent.run(message))
+data = json.loads(response.text)   # agents are prompted to return JSON
+```
+
+---
+
+## Original version
+
+The `master` branch contains the original **Competitive Intelligence Platform** (different pipeline, different purpose). This branch is a full rebuild.
