@@ -1,6 +1,6 @@
-from agents.researcher import ResearcherAgent
-from agents.qualifier import QualifierAgent
-from agents.outreach import OutreachAgent
+from lead_agents.researcher import ResearcherAgent
+from lead_agents.qualifier import QualifierAgent
+from lead_agents.outreach import OutreachAgent
 from human_loop import human_review
 from models import Lead, OutreachDraft
 

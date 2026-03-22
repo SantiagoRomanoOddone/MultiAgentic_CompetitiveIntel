@@ -26,9 +26,10 @@ def load_leads(path: Path) -> list[Lead]:
 
 
 def check_env() -> None:
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        print("\nError: ANTHROPIC_API_KEY is not set.")
-        print("  export ANTHROPIC_API_KEY=sk-ant-...")
+    missing = [v for v in ("OPEN_AI_ENDPOINT", "OPEN_AI_KEY", "CHAT_MODEL") if not os.getenv(v)]
+    if missing:
+        print(f"\nError: missing environment variables: {', '.join(missing)}")
+        print("  Copy .env.example to .env and fill in the values.")
         sys.exit(1)
 
 
