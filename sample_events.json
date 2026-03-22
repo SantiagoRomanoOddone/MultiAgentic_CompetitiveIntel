@@ -1,0 +1,62 @@
+[
+  {
+    "ean": "7791813424872",
+    "product_name": "Leche La Serenisima Entera 1L",
+    "brand": "La Serenisima",
+    "chain": "Carrefour",
+    "branch_id": "CAR-001",
+    "city": "Buenos Aires",
+    "date": "2026-03-22",
+    "list_price": 1950.0,
+    "promo_price": null,
+    "previous_price": 1750.0
+  },
+  {
+    "ean": "7790040061038",
+    "product_name": "Aceite Natura Girasol 1.5L",
+    "brand": "Natura",
+    "chain": "DIA",
+    "branch_id": "DIA-042",
+    "city": "Rosario",
+    "date": "2026-03-22",
+    "list_price": 2100.0,
+    "promo_price": 1680.0,
+    "previous_price": 2100.0
+  },
+  {
+    "ean": "7790580008143",
+    "product_name": "Detergente Magistral 750ml",
+    "brand": "Magistral",
+    "chain": "Jumbo",
+    "branch_id": "JMB-008",
+    "city": "Cordoba",
+    "date": "2026-03-22",
+    "list_price": 1420.0,
+    "promo_price": null,
+    "previous_price": 1850.0
+  },
+  {
+    "ean": "7792361007023",
+    "product_name": "Yogur Activia Frutilla 190g",
+    "brand": "Activia",
+    "chain": "Walmart",
+    "branch_id": "WAL-015",
+    "city": "Buenos Aires",
+    "date": "2026-03-22",
+    "list_price": 890.0,
+    "promo_price": null,
+    "previous_price": 870.0
+  },
+  {
+    "ean": "7798016830116",
+    "product_name": "Agua Villavicencio 2.25L",
+    "brand": "Villavicencio",
+    "chain": "Coto",
+    "branch_id": "COT-031",
+    "city": "Mendoza",
+    "date": "2026-03-22",
+    "list_price": 650.0,
+    "promo_price": 520.0,
+    "previous_price": null
+  }
+]
