@@ -1,0 +1,10 @@
+flowchart TD
+  Researcher["Researcher (Start)"];
+  Qualifier["Qualifier"];
+  Outreach["Outreach"];
+  Auto_Skip["Auto-Skip"];
+  Human_Review["Human Review"];
+  Researcher --> Qualifier;
+  Qualifier --> Outreach;
+  Qualifier --> Auto_Skip;
+  Outreach --> Human_Review;

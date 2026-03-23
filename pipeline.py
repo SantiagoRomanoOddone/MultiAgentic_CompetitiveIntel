@@ -1,49 +1,61 @@
-from lead_agents.researcher import ResearcherAgent
-from lead_agents.qualifier import QualifierAgent
-from lead_agents.outreach import OutreachAgent
+from intel_agents.fetcher import DataFetcherAgent
+from intel_agents.analyst import AnalystAgent
+from intel_agents.recommender import RecommenderAgent
+from control_layer import ControlLayer
 from human_loop import human_review
-from models import Lead, OutreachDraft
-
-
-QUALIFY_THRESHOLD = 5  # Leads below this score are auto-skipped
+from rl_feedback import log_decision, compute_threshold, approval_rate_summary
+from models import PriceEvent, ActionRecommendation
 
 
 class Pipeline:
     def __init__(self):
-        self.researcher = ResearcherAgent()
-        self.qualifier = QualifierAgent()
-        self.outreach = OutreachAgent()
+        self.fetcher = DataFetcherAgent()
+        self.analyst = AnalystAgent()
+        self.recommender = RecommenderAgent()
+        # Threshold is learned from past human decisions via RL feedback
+        threshold = compute_threshold()
+        self.control = ControlLayer(skip_threshold=threshold)
+        print(f"  [RL]  Learned skip threshold: {threshold}  (auto-skip urgency < {threshold})")
 
-    def run(self, leads: list[Lead]) -> list[OutreachDraft]:
+    def run(self, events: list[PriceEvent]) -> list[ActionRecommendation]:
         approved = []
 
-        for i, lead in enumerate(leads, 1):
-            print(f"\n{'─' * 55}")
-            print(f"  Lead {i}/{len(leads)}: {lead.name} @ {lead.company}")
-            print(f"{'─' * 55}")
+        for i, event in enumerate(events, 1):
+            print(f"\n{'─' * 60}")
+            print(f"  Event {i}/{len(events)}: {event.product_name} @ {event.chain}")
+            print(f"{'─' * 60}")
 
-            print("  [RESEARCHER]  Gathering intel...", end=" ", flush=True)
-            researched = self.researcher.run(lead)
+            print("  [FETCHER]     Enriching with competitive context...", end=" ", flush=True)
+            analyzed = self.fetcher.run(event)
             print("done")
 
-            print("  [QUALIFIER]   Scoring lead...", end=" ", flush=True)
-            qualified = self.qualifier.run(researched)
-            category_label = {"hot": "HOT", "warm": "WARM", "cold": "COLD"}.get(
-                qualified.category, qualified.category.upper()
+            print("  [ANALYST]     Scoring urgency...", end=" ", flush=True)
+            alert = self.analyst.run(analyzed)
+            priority = self.control.priority(alert)
+            print(
+                f"done  →  {alert.urgency_score}/10  [{alert.alert_type}]  ({priority.upper()})"
             )
-            print(f"done  →  {qualified.score}/10 {category_label}")
-            print(f"              {qualified.reasoning}")
+            print(f"              {alert.reasoning}")
 
-            if qualified.score < QUALIFY_THRESHOLD:
-                print("  → Auto-skipped (score below threshold)")
+            if self.control.should_auto_skip(alert):
+                print("  → Auto-skipped by control layer (urgency below learned threshold)")
+                log_decision(alert.alert_type, alert.urgency_score, approved=False)
                 continue
 
-            print("  [OUTREACH]    Drafting email...", end=" ", flush=True)
-            draft = self.outreach.run(qualified)
+            if self.control.should_escalate(alert):
+                print("  ⚠  Escalated — flagged for priority review")
+
+            print("  [RECOMMENDER] Drafting action...", end=" ", flush=True)
+            recommendation = self.recommender.run(alert)
             print("done")
 
-            result = human_review(draft)
+            result = human_review(recommendation)
+            log_decision(alert.alert_type, alert.urgency_score, approved=result is not None)
             if result:
                 approved.append(result)
+
+        summary = approval_rate_summary()
+        if summary:
+            print(f"\n  [RL] Approval rates by type: {summary}")
 
         return approved
